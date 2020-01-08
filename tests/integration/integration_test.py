@@ -13,19 +13,19 @@
 from marquez_client import MarquezClient
 
 import logging
+import subprocess
+
 import os
 import pytest
 import requests
-import subprocess
 import sys
 from urllib3.util.retry import Retry
 
 
 def test_data_in_marquez(wait_for_marquez, init_airflow_db):
-
-    dag_id = "test_dag_v2"
+    dag_id = "test_dag"
     execution_date = "2019-02-01T00:00:00"
-    namespace = "integration-test"
+    namespace = "integration_test"
 
     c = MarquezClient(namespace_name=namespace)
 
@@ -34,10 +34,11 @@ def test_data_in_marquez(wait_for_marquez, init_airflow_db):
     result = c.get_namespace(namespace)
     assert(result and result['name'] == namespace)
 
-    expected_job = "test_dag_v2"
-    result = c.get_job(expected_job)
-    assert(result and result['name'] == expected_job)
 
+    expected_jobs = ["test_dag.run_this_1", "test_dag.run_this_2"]
+    for expected_job in expected_jobs:
+        result = c.get_job(expected_job)
+        assert(result and result['name'] == expected_job)
 
 def trigger_dag(dag_id, execution_date):
     process = airflow_cli(['backfill', dag_id, '-s', execution_date])
@@ -59,7 +60,6 @@ def airflow_cli(args):
         logging.error(process.stderr)
     return process
 
-
 @pytest.fixture(scope="module")
 def init_airflow_db():
     process = airflow_cli(['initdb'])
@@ -69,7 +69,7 @@ def init_airflow_db():
 @pytest.fixture(scope="module")
 def wait_for_marquez():
     url = 'http://{}:{}/ping'.format(os.environ['MARQUEZ_HOST'],
-                                     os.environ['MARQUEZ_PORT'])
+                                     os.environ['MARQUEZ_ADMIN_PORT'])
     session = requests.Session()
     retry = Retry(total=5, backoff_factor=0.5)
     adapter = requests.adapters.HTTPAdapter(max_retries=retry)
