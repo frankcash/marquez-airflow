@@ -10,15 +10,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from marquez_client import MarquezClient
-
 import logging
-import subprocess
-
 import os
+import subprocess
+import sys
+
 import pytest
 import requests
-import sys
+from marquez_client import MarquezClient
 from urllib3.util.retry import Retry
 
 
@@ -34,11 +33,11 @@ def test_data_in_marquez(wait_for_marquez, init_airflow_db):
     result = c.get_namespace(namespace)
     assert(result and result['name'] == namespace)
 
-
     expected_jobs = ["test_dag.run_this_1", "test_dag.run_this_2"]
     for expected_job in expected_jobs:
         result = c.get_job(expected_job)
         assert(result and result['name'] == expected_job)
+
 
 def trigger_dag(dag_id, execution_date):
     process = airflow_cli(['backfill', dag_id, '-s', execution_date])
@@ -59,6 +58,7 @@ def airflow_cli(args):
     if process.stderr:
         logging.error(process.stderr)
     return process
+
 
 @pytest.fixture(scope="module")
 def init_airflow_db():
