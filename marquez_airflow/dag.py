@@ -8,7 +8,7 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.
+# limitations under the License.x
 
 import json
 import os
@@ -138,8 +138,10 @@ class DAG(airflow.models.DAG):
         task_location = None
         try:
             if hasattr(task, 'file_path') and task.file_path:
+                log.info(f'task.file_path {task.file_path}')
                 task_location = get_location(task.file_path)
             else:
+                log.info(f'task.dag.fileloc {task.dag.fileloc}')
                 task_location = get_location(task.dag.fileloc)
         except Exception as e:
             log.warn(f'Unable to fetch the location {e}')
