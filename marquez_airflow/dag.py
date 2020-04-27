@@ -142,7 +142,7 @@ class DAG(airflow.models.DAG):
             else:
                 task_location = get_location(task.dag.fileloc)
         except Exception:
-            log.warn(f'Unable to fetch the location')
+            log.warn(f'Unable to fetch the location {task.file_path} {task.dag.fileloc}')
 
         steps_metadata = []
         if extractor:
@@ -155,13 +155,13 @@ class DAG(airflow.models.DAG):
                          marquez_namespace={self.marquez_namespace}''')
                 steps_metadata = extractor(task).extract()
             except Exception as e:
-                log.error(f'Failed to extract metadata {e}',
-                          airflow_dag_id=self.dag_id,
-                          task_id=task.task_id,
-                          airflow_run_id=dag_run_id,
-                          marquez_namespace=self.marquez_namespace)
+                log.error(f'''Failed to extract metadata {e}',
+                          airflow_dag_id={self.dag_id},
+                          task_id={task.task_id},
+                          airflow_run_id={dag_run_id},
+                          marquez_namespace={self.marquez_namespace}''')
         else:
-            log.warn('''Unable to find an extractor.,
+            log.warn(f'''Unable to find an extractor.,
                      task_type={task.__class__.__name__},
                      airflow_dag_id={self.dag_id},
                      task_id={task.task_id},
