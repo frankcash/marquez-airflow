@@ -55,9 +55,7 @@ class DAG(airflow.models.DAG):
         try:
             extractors = get_extractors()
         except Exception as e:
-            log.warn(f'Failed retrieve extractors: {e}',
-                     airflow_dag_id=self.dag_id,
-                     marquez_namespace=self.marquez_namespace)
+            log.warn(f'Failed retrieve extractors: {e} {self.dag_id} {self.marquez_namespace}')
 
         # Marquez metadata collection
         try:
@@ -78,22 +76,22 @@ class DAG(airflow.models.DAG):
                         task,
                         extractors.get(task.__class__.__name__))
                 except Exception as e:
-                    log.error(f'Failed to record task: {e}',
-                              airflow_dag_id=self.dag_id,
-                              task_id=task_id,
-                              marquez_namespace=self.marquez_namespace,
-                              duration_ms=(self._now_ms() - t))
+                    log.error(f'''Failed to record task: {e},
+                              airflow_dag_id={self.dag_id},
+                              task_id={task_id},
+                              marquez_namespace={self.marquez_namespace},
+                              duration_ms={(self._now_ms() - t)}''')
 
-            log.info(f'Successfully recorded metadata',
-                     airflow_dag_id=self.dag_id,
-                     marquez_namespace=self.marquez_namespace,
-                     duration_ms=(self._now_ms() - create_dag_start_ms))
+            log.info(f'''Successfully recorded metadata,
+                     airflow_dag_id={self.dag_id},
+                     marquez_namespace={self.marquez_namespace},
+                     duration_ms={(self._now_ms() - create_dag_start_ms)}''')
 
         except Exception as e:
-            log.error(f'Failed to record metadata: {e}',
-                      airflow_dag_id=self.dag_id,
-                      marquez_namespace=self.marquez_namespace,
-                      duration_ms=(self._now_ms() - create_dag_start_ms))
+            log.error(f'''Failed to record metadata: {e},
+                      airflow_dag_id={self.dag_id},
+                      marquez_namespace={self.marquez_namespace},
+                      duration_ms={(self._now_ms() - create_dag_start_ms)}''')
 
         return dagrun
 
@@ -108,13 +106,13 @@ class DAG(airflow.models.DAG):
                         job_name, dagrun.run_id, **kwargs)
                 except Exception as e:
                     log.error(
-                        f'Failed to record task run state change: {e}',
-                        dag_id=self.dag_id)
+                        f'''Failed to record task run state change: {e},
+                        dag_id={self.dag_id}''')
 
         except Exception as e:
             log.error(
-                f'Failed to record dagrun state change: {e}',
-                dag_id=self.dag_id)
+                f'''Failed to record dagrun state change: {e}',
+                dag_id={self.dag_id}''')
 
         return super().handle_callback(*args, **kwargs)
 
@@ -149,12 +147,12 @@ class DAG(airflow.models.DAG):
         steps_metadata = []
         if extractor:
             try:
-                log.info(f'Using extractor {extractor.__name__}',
-                         task_type=task.__class__.__name__,
-                         airflow_dag_id=self.dag_id,
-                         task_id=task.task_id,
-                         airflow_run_id=dag_run_id,
-                         marquez_namespace=self.marquez_namespace)
+                log.info(f'''Using extractor {extractor.__name__},
+                         task_type={task.__class__.__name__},
+                         airflow_dag_id={self.dag_id},
+                         task_id={task.task_id},
+                         airflow_run_id={dag_run_id},
+                         marquez_namespace={self.marquez_namespace}''')
                 steps_metadata = extractor(task).extract()
             except Exception as e:
                 log.error(f'Failed to extract metadata {e}',
@@ -163,12 +161,12 @@ class DAG(airflow.models.DAG):
                           airflow_run_id=dag_run_id,
                           marquez_namespace=self.marquez_namespace)
         else:
-            log.warn('Unable to find an extractor.',
-                     task_type=task.__class__.__name__,
-                     airflow_dag_id=self.dag_id,
-                     task_id=task.task_id,
-                     airflow_run_id=dag_run_id,
-                     marquez_namespace=self.marquez_namespace)
+            log.warn('''Unable to find an extractor.,
+                     task_type={task.__class__.__name__},
+                     airflow_dag_id={self.dag_id},
+                     task_id={task.task_id},
+                     airflow_run_id={dag_run_id},
+                     marquez_namespace={self.marquez_namespace}''')
 
         task_name = f'{self.dag_id}.{task.task_id}'
 
@@ -187,23 +185,23 @@ class DAG(airflow.models.DAG):
             try:
                 input_datasets = self.register_datasets(step.inputs)
             except Exception as e:
-                log.error(f'Failed to register inputs: {e}',
-                          inputs=str(step.inputs),
-                          airflow_dag_id=self.dag_id,
-                          task_id=task.task_id,
-                          step=step.name,
-                          airflow_run_id=dag_run_id,
-                          marquez_namespace=self.marquez_namespace)
+                log.error(f'''Failed to register inputs: {e},
+                          inputs={str(step.inputs)},
+                          airflow_dag_id={self.dag_id},
+                          task_id={task.task_id},
+                          step={step.name},
+                          airflow_run_id={dag_run_id},
+                          marquez_namespace={self.marquez_namespace}''')
             try:
                 output_datasets = self.register_datasets(step.outputs)
             except Exception as e:
-                log.error(f'Failed to register outputs: {e}',
-                          outputs=str(step.outputs),
-                          airflow_dag_id=self.dag_id,
-                          task_id=task.task_id,
-                          step=step.name,
-                          airflow_run_id=dag_run_id,
-                          marquez_namespace=self.marquez_namespace)
+                log.error(f'''Failed to register outputs: {e},
+                          outputs={str(step.outputs)},
+                          airflow_dag_id={self.dag_id},
+                          task_id={task.task_id},
+                          step={step.name},
+                          airflow_run_id={dag_run_id},
+                          marquez_namespace={self.marquez_namespace}''')
 
             marquez_client.create_job(step.name,
                                       'BATCH',  # job type
@@ -213,9 +211,9 @@ class DAG(airflow.models.DAG):
                                       output_dataset=output_datasets,
                                       context=step.context,
                                       description=self.description)
-            log.info(f'Successfully recorded job: {step.name}',
-                     airflow_dag_id=self.dag_id,
-                     marquez_namespace=self.marquez_namespace)
+            log.info(f'''Successfully recorded job: {step.name},
+                     airflow_dag_id={self.dag_id},
+                     marquez_namespace={self.marquez_namespace}''')
 
             marquez_jobrun_id = marquez_client.create_job_run(
                 step.name,
@@ -227,16 +225,16 @@ class DAG(airflow.models.DAG):
                 marquez_jobrun_ids.append(marquez_jobrun_id)
                 marquez_client.mark_job_run_as_started(marquez_jobrun_id)
             else:
-                log.error(f'Failed to get run id: {step.name}',
-                          airflow_dag_id=self.dag_id,
-                          airflow_run_id=dag_run_id,
-                          marquez_namespace=self.marquez_namespace)
-            log.info(f'Successfully recorded job run: {step.name}',
-                     airflow_dag_id=self.dag_id,
-                     airflow_dag_execution_time=start_time,
-                     marquez_run_id=marquez_jobrun_id,
-                     marquez_namespace=self.marquez_namespace,
-                     duration_ms=(self._now_ms() - report_job_start_ms))
+                log.error(f'''Failed to get run id: {step.name},
+                          airflow_dag_id={self.dag_id},
+                          airflow_run_id={dag_run_id},
+                          marquez_namespace={self.marquez_namespace}''')
+            log.info(f'''Successfully recorded job run: {step.name},
+                     airflow_dag_id={self.dag_id},
+                     airflow_dag_execution_time={start_time},
+                     marquez_run_id={marquez_jobrun_id},
+                     marquez_namespace={self.marquez_namespace},
+                     duration_ms={(self._now_ms() - report_job_start_ms)}''')
 
         # Store the mapping for all the steps associated with a task
         try:
@@ -261,12 +259,12 @@ class DAG(airflow.models.DAG):
             JobIdMapping.make_key(job_name, run_id), session)
 
         if marquez_job_run_ids:
-            log.info(f'Found job runs.',
-                     airflow_dag_id=self.dag_id,
-                     airflow_job_id=job_name,
-                     airflow_run_id=run_id,
-                     marquez_run_ids=marquez_job_run_ids,
-                     marquez_namespace=self.marquez_namespace)
+            log.info(f'''Found job runs.,
+                     airflow_dag_id={self.dag_id},
+                     airflow_job_id={job_name},
+                     airflow_run_id={run_id},
+                     marquez_run_ids={marquez_job_run_ids},
+                     marquez_namespace={self.marquez_namespace}''')
 
             ids = json.loads(marquez_job_run_ids)
             if kwargs.get('success'):
@@ -279,12 +277,12 @@ class DAG(airflow.models.DAG):
                         marquez_job_run_id)
 
         state = 'COMPLETED' if kwargs.get('success') else 'FAILED'
-        log.info(f'Marked job run(s) as {state}.',
-                 airflow_dag_id=self.dag_id,
-                 airflow_job_id=job_name,
-                 airflow_run_id=run_id,
-                 marquez_run_id=marquez_job_run_ids,
-                 marquez_namespace=self.marquez_namespace)
+        log.info(f'''Marked job run(s) as {state}.,
+                 airflow_dag_id={self.dag_id},
+                 airflow_job_id={job_name},
+                 airflow_run_id={run_id},
+                 marquez_run_id={marquez_job_run_ids},
+                 marquez_namespace={self.marquez_namespace}''')
 
     def get_marquez_client(self):
         if not self._marquez_client:
