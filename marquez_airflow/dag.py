@@ -17,7 +17,7 @@ import time
 from marquez_client import MarquezClient
 
 import airflow.models
-from marquez_airflow import log
+from airflow.utils.log.logging_mixin import LoggingMixin
 from marquez_airflow.extractors import (Dataset, Source, StepMetadata,
                                         get_extractors)
 from marquez_airflow.utils import JobIdMapping, get_location
@@ -25,6 +25,7 @@ from pendulum import Pendulum
 
 _NOMINAL_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
+log = LoggingMixin().log
 
 class DAG(airflow.models.DAG):
     DEFAULT_NAMESPACE = 'default'
