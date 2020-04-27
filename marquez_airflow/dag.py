@@ -178,6 +178,7 @@ class DAG(airflow.models.DAG):
             steps_metadata = [StepMetadata(task_name)]
 
         log.info(f"steps_metadata {steps_metadata} {task_name}")
+        log.info(f"self {self} {dir(self)}")
 
         # store all the JobRuns associated with a task
         marquez_jobrun_ids = []
