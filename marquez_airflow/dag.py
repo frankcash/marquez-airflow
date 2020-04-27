@@ -141,8 +141,8 @@ class DAG(airflow.models.DAG):
                 task_location = get_location(task.file_path)
             else:
                 task_location = get_location(task.dag.fileloc)
-        except Exception:
-            log.warn(f'Unable to fetch the location {task.file_path} {task.dag.fileloc}')
+        except Exception as e:
+            log.warn(f'Unable to fetch the location {e}')
 
         steps_metadata = []
         if extractor:
