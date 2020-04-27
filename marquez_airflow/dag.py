@@ -184,6 +184,7 @@ class DAG(airflow.models.DAG):
 
             try:
                 input_datasets = self.register_datasets(step.inputs)
+                log.info(f"{input_dataset}, {step.inputs}")
             except Exception as e:
                 log.error(f'''Failed to register inputs: {e},
                           inputs={str(step.inputs)},
